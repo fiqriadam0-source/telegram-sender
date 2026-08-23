@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Telegram Messenger</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.95);
+      width: 100%;
+      max-width: 420px;
+      border-radius: 20px;
+      padding: 30px 25px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(10px);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    .header h1 {
+      color: #0088cc;
+      font-size: 24px;
+      margin-bottom: 5px;
+    }
+
+    .header p {
+      color: #666;
+      font-size: 13px;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: #333;
+      font-size: 14px;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 13px 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      font-size: 15px;
+      transition: all 0.3s ease;
+      background: #f9f9f9;
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: #0088cc;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(0, 136, 204, 0.15);
+    }
+
+    textarea {
+      height: 110px;
+      resize: vertical;
+    }
+
+    .btn-send {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #0088cc, #00a2ff);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 5px;
+    }
+
+    .btn-send:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0, 136, 204, 0.4);
+    }
+
+    .btn-send:disabled {
+      background: #aaa;
+      transform: none;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    .btn-clear {
+      width: 100%;
+      padding: 11px;
+      background: transparent;
+      color: #e74c3c;
+      border: 2px solid #e74c3c;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 12px;
+      transition: all 0.3s ease;
+    }
+
+    .btn-clear:hover {
+      background: #e74c3c;
+      color: white;
+    }
+
+    #status {
+      margin-top: 18px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 14px;
+      min-height: 22px;
+    }
+
+    .success { color: #27ae60; }
+    .error { color: #e74c3c; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Telegram Messenger</h1>
+      <p>Token & Chat ID disimpan automatik</p>
+    </div>
+
+    <div class="form-group">
+      <label>Bot Token</label>
+      <input type="text" id="token" placeholder="Masukkan Bot Token">
+    </div>
+
+    <div class="form-group">
+      <label>Chat ID</label>
+      <input type="text" id="chatId" placeholder="Masukkan Chat ID">
+    </div>
+
+    <div class="form-group">
+      <label>Mesej</label>
+      <textarea id="message" placeholder="Tulis mesej anda di sini..."></textarea>
+    </div>
+
+    <button class="btn-send" onclick="hantarMesej()">Hantar Mesej</button>
+    <button class="btn-clear" onclick="padamData()">Padam Data Tersimpan</button>
+
+    <div id="status"></div>
+  </div>
+
+  <script>
+    window.onload = function() {
+      const savedToken = localStorage.getItem('tg_token');
+      const savedChatId = localStorage.getItem('tg_chatId');
+      if (savedToken) document.getElementById('token').value = savedToken;
+      if (savedChatId) document.getElementById('chatId').value = savedChatId;
+    };
+
+    async function hantarMesej() {
+      const token = document.getElementById('token').value.trim();
+      const chatId = document.getElementById('chatId').value.trim();
+      const message = document.getElementById('message').value.trim();
+      const status = document.getElementById('status');
+      const button = document.querySelector('.btn-send');
+
+      if (!token || !chatId || !message) {
+        status.innerHTML = '<span class="error">Sila isi semua medan!</span>';
+        return;
+      }
+
+      localStorage.setItem('tg_token', token);
+      localStorage.setItem('tg_chatId', chatId);
+
+      button.disabled = true;
+      status.innerHTML = 'Sedang menghantar...';
+
+      try {
+        const url = `https://api.telegram.org/bot${token}/sendMessage`;
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: message,
+            parse_mode: 'HTML'
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.ok) {
+          status.innerHTML = '<span class="success">Mesej berjaya dihantar!</span>';
+          document.getElementById('message').value = '';
+        } else {
+          status.innerHTML = `<span class="error">Gagal: ${data.description}</span>`;
+        }
+      } catch (error) {
+        status.innerHTML = `<span class="error">Ralat: ${error.message}</span>`;
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    function padamData() {
+      localStorage.removeItem('tg_token');
+      localStorage.removeItem('tg_chatId');
+      document.getElementById('token').value = '';
+      document.getElementById('chatId').value = '';
+      document.getElementById('status').innerHTML = '<span class="success">Data telah dipadam.</span>';
+    }
+  </script>
+</body>
+</html>
