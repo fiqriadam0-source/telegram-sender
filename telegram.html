@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hantar Mesej ke Telegram Bot</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 420px;
+    }
+    h2 {
+      text-align: center;
+      color: #0088cc;
+      margin-bottom: 25px;
+    }
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: bold;
+      color: #333;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 15px;
+      box-sizing: border-box;
+    }
+    textarea {
+      height: 120px;
+      resize: vertical;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      background: #0088cc;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-bottom: 10px;
+    }
+    button:hover {
+      background: #006699;
+    }
+    button:disabled {
+      background: #aaa;
+      cursor: not-allowed;
+    }
+    .btn-clear {
+      background: #e74c3c;
+      font-size: 14px;
+      padding: 10px;
+    }
+    .btn-clear:hover {
+      background: #c0392b;
+    }
+    #status {
+      margin-top: 10px;
+      text-align: center;
+      font-weight: bold;
+    }
+    .success { color: green; }
+    .error { color: red; }
+    .info {
+      font-size: 13px;
+      color: #666;
+      text-align: center;
+      margin-bottom: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Telegram Bot Messenger</h2>
+    <div class="info">Token & Chat ID akan disimpan automatik</div>
+
+    <label>Bot Token</label>
+    <input type="text" id="token" placeholder="Contoh: 123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11">
+
+    <label>Chat ID</label>
+    <input type="text" id="chatId" placeholder="Contoh: 123456789 atau -1001234567890">
+
+    <label>Mesej</label>
+    <textarea id="message" placeholder="Tulis mesej di sini..."></textarea>
+
+    <button onclick="hantarMesej()">Hantar Mesej</button>
+    <button class="btn-clear" onclick="padamData()">Padam Data Tersimpan</button>
+
+    <div id="status"></div>
+  </div>
+
+  <script>
+    // Load data tersimpan bila buka page
+    window.onload = function() {
+      const savedToken = localStorage.getItem('tg_token');
+      const savedChatId = localStorage.getItem('tg_chatId');
+
+      if (savedToken) document.getElementById('token').value = savedToken;
+      if (savedChatId) document.getElementById('chatId').value = savedChatId;
+    };
+
+    async function hantarMesej() {
+      const token = document.getElementById('token').value.trim();
+      const chatId = document.getElementById('chatId').value.trim();
+      const message = document.getElementById('message').value.trim();
+      const status = document.getElementById('status');
+      const button = document.querySelector('button');
+
+      if (!token || !chatId || !message) {
+        status.innerHTML = '<span class="error">Sila isi semua medan!</span>';
+        return;
+      }
+
+      // Simpan token & chat id
+      localStorage.setItem('tg_token', token);
+      localStorage.setItem('tg_chatId', chatId);
+
+      button.disabled = true;
+      status.innerHTML = 'Sedang menghantar...';
+
+      try {
+        const url = `https://api.telegram.org/bot${token}/sendMessage`;
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: message,
+            parse_mode: 'HTML'
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.ok) {
+          status.innerHTML = '<span class="success">Mesej berjaya dihantar!</span>';
+          document.getElementById('message').value = '';
+        } else {
+          status.innerHTML = `<span class="error">Gagal: ${data.description}</span>`;
+        }
+      } catch (error) {
+        status.innerHTML = `<span class="error">Ralat: ${error.message}</span>`;
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    function padamData() {
+      localStorage.removeItem('tg_token');
+      localStorage.removeItem('tg_chatId');
+      document.getElementById('token').value = '';
+      document.getElementById('chatId').value = '';
+      document.getElementById('status').innerHTML = '<span class="success">Data telah dipadam.</span>';
+    }
+  </script>
+</body>
+</html>
