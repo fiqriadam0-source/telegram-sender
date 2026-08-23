@@ -28,6 +28,7 @@
       border-radius: 20px;
       padding: 30px 25px;
       box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(10px);
     }
 
     .header {
@@ -76,7 +77,7 @@
     }
 
     textarea {
-      height: 120px;
+      height: 110px;
       resize: vertical;
     }
 
@@ -106,28 +107,18 @@
       cursor: not-allowed;
     }
 
-    .btn-secondary {
+    .btn-clear {
       width: 100%;
       padding: 11px;
       background: transparent;
-      color: #0088cc;
-      border: 2px solid #0088cc;
+      color: #e74c3c;
+      border: 2px solid #e74c3c;
       border-radius: 12px;
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
       margin-top: 12px;
       transition: all 0.3s ease;
-    }
-
-    .btn-secondary:hover {
-      background: #0088cc;
-      color: white;
-    }
-
-    .btn-clear {
-      color: #e74c3c;
-      border-color: #e74c3c;
     }
 
     .btn-clear:hover {
@@ -145,42 +136,32 @@
 
     .success { color: #27ae60; }
     .error { color: #e74c3c; }
-
-    .hidden {
-      display: none !important;
-    }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
       <h1>Telegram Messenger</h1>
-      <p id="subtitle">Masukkan Token & Chat ID</p>
+      <p>Token & Chat ID disimpan automatik</p>
     </div>
 
-    <!-- Bahagian Token & Chat ID -->
-    <div id="setupSection">
-      <div class="form-group">
-        <label>Bot Token</label>
-        <input type="text" id="token" placeholder="Masukkan Bot Token">
-      </div>
-
-      <div class="form-group">
-        <label>Chat ID</label>
-        <input type="text" id="chatId" placeholder="Masukkan Chat ID">
-      </div>
+    <div class="form-group">
+      <label>Bot Token</label>
+      <input type="text" id="token" placeholder="Masukkan Bot Token">
     </div>
 
-    <!-- Bahagian Mesej (selalu nampak) -->
+    <div class="form-group">
+      <label>Chat ID</label>
+      <input type="text" id="chatId" placeholder="Masukkan Chat ID">
+    </div>
+
     <div class="form-group">
       <label>Mesej</label>
       <textarea id="message" placeholder="Tulis mesej anda di sini..."></textarea>
     </div>
 
     <button class="btn-send" onclick="hantarMesej()">Hantar Mesej</button>
-
-    <button class="btn-secondary" id="btnTukar" onclick="tunjukSetup()">Tukar Token / Chat ID</button>
-    <button class="btn-secondary btn-clear" onclick="padamData()">Padam Data</button>
+    <button class="btn-clear" onclick="padamData()">Padam Data Tersimpan</button>
 
     <div id="status"></div>
   </div>
@@ -189,25 +170,9 @@
     window.onload = function() {
       const savedToken = localStorage.getItem('tg_token');
       const savedChatId = localStorage.getItem('tg_chatId');
-
-      if (savedToken && savedChatId) {
-        // Ada data tersimpan → sembunyikan kotak token & chat id
-        document.getElementById('token').value = savedToken;
-        document.getElementById('chatId').value = savedChatId;
-        document.getElementById('setupSection').classList.add('hidden');
-        document.getElementById('subtitle').innerText = "Token & Chat ID sudah disimpan";
-        document.getElementById('btnTukar').style.display = 'block';
-      } else {
-        // Tiada data → tunjukkan kotak setup
-        document.getElementById('btnTukar').style.display = 'none';
-      }
+      if (savedToken) document.getElementById('token').value = savedToken;
+      if (savedChatId) document.getElementById('chatId').value = savedChatId;
     };
-
-    function tunjukSetup() {
-      document.getElementById('setupSection').classList.remove('hidden');
-      document.getElementById('subtitle').innerText = "Tukar Token & Chat ID";
-      document.getElementById('btnTukar').style.display = 'none';
-    }
 
     async function hantarMesej() {
       const token = document.getElementById('token').value.trim();
@@ -221,14 +186,8 @@
         return;
       }
 
-      // Simpan data
       localStorage.setItem('tg_token', token);
       localStorage.setItem('tg_chatId', chatId);
-
-      // Sembunyikan setup selepas hantar
-      document.getElementById('setupSection').classList.add('hidden');
-      document.getElementById('subtitle').innerText = "Token & Chat ID sudah disimpan";
-      document.getElementById('btnTukar').style.display = 'block';
 
       button.disabled = true;
       status.innerHTML = 'Sedang menghantar...';
@@ -265,9 +224,6 @@
       localStorage.removeItem('tg_chatId');
       document.getElementById('token').value = '';
       document.getElementById('chatId').value = '';
-      document.getElementById('setupSection').classList.remove('hidden');
-      document.getElementById('subtitle').innerText = "Masukkan Token & Chat ID";
-      document.getElementById('btnTukar').style.display = 'none';
       document.getElementById('status').innerHTML = '<span class="success">Data telah dipadam.</span>';
     }
   </script>
